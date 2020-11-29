@@ -57,7 +57,7 @@ promotionRouter.route('/:promotionId')
     res.end(`POST operation not supported on /promotions/${req.params.promotionId}`);
 })
 
-.put ((req, res) => {
+.put ((req, res, next) => {
     Promotion.findByIdAndUpdate(req.params.promotionId, {
         $set: req.body
     },{
@@ -69,7 +69,7 @@ promotionRouter.route('/:promotionId')
     .catch(err => next(err));
 })
 
-.delete((req, res)=>{
+.delete((req, res, next)=>{
     Promotion.findByIdAndDelete(req.params.promotionId)
     .then(response=>{
         res.json(response);
