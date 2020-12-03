@@ -1,5 +1,4 @@
 const express = require('express');
-const { response } = require('../app');
 const Campsite = require('../models/campsite');
 
 const campsiteRouter = express.Router();
