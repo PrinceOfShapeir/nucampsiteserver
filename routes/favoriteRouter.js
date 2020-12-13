@@ -23,7 +23,7 @@ const favoriteRouter = express.Router();
 });
 
 */
-
+/*
 function toPrimitive (input){
 
     let output = "";
@@ -32,26 +32,41 @@ function toPrimitive (input){
     }
 
     return output;
-}
+}*/
 
 function uniqueMerge (input, old){
 
-    let favoritesChange = false;
     let tempArray = JSON.parse(JSON.stringify(old));
+    console.log("temparray:", tempArray);
     let initLength = tempArray.length;
     let changed = false;
-    for(let i in input){
-        tempArray.push(input._id);
-    }
+        for(let i in input){
+            if(input[i]!==undefined) tempArray.push(input[i]._id);
+        }
     let tempSet = new Set(tempArray);
+    //tempSet.delete(undefined);
+    console.log(tempSet);
     if(tempSet.size!==initLength) {
         changed = true;
     }
 
     if(changed){
-        return tempSet
+        return tempSet;
     } else return changed;
 
+}
+
+function composeCampsitesArrayWithIds (inputSet){
+
+    if(!inputSet) return false;
+    let tempArray = Array.from(inputSet);
+    let outputArray = [];
+    for(let i in tempArray){
+        if(tempArray[i]!==undefined) outputArray.push({"_id":`${tempArray[i]}`});
+    }
+
+
+    return outputArray;
 }
 
 favoriteRouter.route('/')
@@ -98,25 +113,26 @@ favoriteRouter.route('/')
            
             //console.log(Array.from(tempSet).toString());
 
-            
+
             if(req.body){
-                for(let i in req.body){
-                    let primitive = toPrimitive(req.body[i]._id);
-                    if(!tempSet.has(primitive)){
-                        let output = req.body[i];
-                        
-                        tempSet.add(primitive);
-                        favorites.campsites.push(output);
-                        favoritesChange = true;
-                    } else console.log(req.body[i]._id, "already taken");
-                }
-                if(favoritesChange) favorites.save()
-                .then(favorites=>{
+                
+                let favoritesChange = uniqueMerge(req.body, favorites.campsites);
+                //uniquemerge returns a set or false
+                if(favoritesChange) {
+
+                    //favorites.campsites = composeCampsitesArrayWithIds(favoritesChange);
+                    favorites.campsites = composeCampsitesArrayWithIds(favoritesChange);
+                    console.log('favoritesChange:', favoritesChange, 'becomes ', favorites.campsites);
+                    
+                    favorites.save()
+                    .then(favorites=>{
                     res.statusCode = 200;
                     res.setHeader('Content-Type', 'application/json');
                     console.log("favorites changed");
                     res.json(favorites);
                 }).catch(err=>next(err));
+
+                }
                 else  {
                     console.log('No new favorites to add', favorites);
                     res.statusCode = 200;
