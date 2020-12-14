@@ -192,7 +192,7 @@ favoriteRouter.route('/:campsiteId')
     Favorite.findOne({user: req.user._id})
     .then(favorites=>{
         if(favorites&&favorites.campsites){
-            if(!favorites.campsites.includes(req.params.campsiteId)){
+            if(uniqueMerge([{"_id": `${req.params.campsiteId}`}], favorites.campsites)){
                 favorites.campsites.push({"_id":`${req.params.campsiteId}`})
                 favorites.save()
                 .then(favorites=>{
@@ -200,6 +200,10 @@ favoriteRouter.route('/:campsiteId')
                     res.setHeader('Content-Type', 'application/json');
                     res.json(favorites);
                 }).catch(err=>next(err));
+            } else {
+                res.statusCode = 200;
+                res.setHeader('Content-Type', 'text/plain');
+                res.end('That campsite is already a favorite!');
             }
         } else {
             Favorite.create({"campsites": [`${req.params.campsiteId}`], "user":`${req.user._id}`})
@@ -221,7 +225,7 @@ favoriteRouter.route('/:campsiteId')
     Favorite.findOne({user: req.user._id})
     .then(favorites=>{
         if(favorites.campsites.length>0){
-            let toDelete = favorites.campsites.indexOf();
+            let toDelete = favorites.campsites.indexOf(req.params.campsiteId);
             if(toDelete>=0){
                 favorites.campsites.splice(toDelete, 1);
                 favorites.save()
